@@ -4,12 +4,15 @@ import { Version } from '@microsoft/sp-core-library';
 import {
   BaseClientSideWebPart,
   IPropertyPaneConfiguration,
-  PropertyPaneTextField
+  PropertyPaneTextField,
+  PropertyPaneDropdown,
+  IPropertyPaneDropdownOption
 } from '@microsoft/sp-webpart-base';
 
 import * as strings from 'FilteredPromotedLinksWebPartStrings';
 import FilteredPromotedLinks from './components/FilteredPromotedLinks';
 import { IFilteredPromotedLinksProps } from './components/IFilteredPromotedLinksProps';
+import { IFilteredPromotedLinksWebPartProps } from './IFilteredPromotedLinksWebPartProps';
 
 export interface IFilteredPromotedLinksWebPartProps {
   description: string;
@@ -17,11 +20,14 @@ export interface IFilteredPromotedLinksWebPartProps {
 
 export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<IFilteredPromotedLinksWebPartProps> {
 
+  private lists: IPropertyPaneDropdownOption[];
+  private listsDropdownDisabled: boolean = true;
+
   public render(): void {
     const element: React.ReactElement<IFilteredPromotedLinksProps > = React.createElement(
       FilteredPromotedLinks,
       {
-        description: this.properties.description
+        listName: this.properties.listName
       }
     );
 
@@ -47,8 +53,10 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
             {
               groupName: strings.BasicGroupName,
               groupFields: [
-                PropertyPaneTextField('description', {
-                  label: strings.DescriptionFieldLabel
+                PropertyPaneDropdown('listName', {
+                  label: strings.ListNameFieldLabel,
+                  options: this.lists,
+                  disabled: this.listsDropdownDisabled
                 })
               ]
             }

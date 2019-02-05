@@ -18,9 +18,9 @@
     "group": { "default": "Other" },
     "title": { "default": "Filtered Promoted Links" },
     "description": { "default": "Filtered Promoted Links description" },
-    "officeFabricIconFontName": "Page",
+    "officeFabricIconFontName": "PictureTile",
     "properties": {
-      "description": "Filtered Promoted Links"
+      "listName": ""
     }
   }]
 }
