@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
+  "solution": {
+    "name": "filtered-promoted-links-client-side-solution",
+    "id": "5513d807-a671-492f-a5de-3e0d4f67b009",
+    "version": "1.0.0.0",
+    "includeClientSideAssets": true
+  },
+  "paths": {
+    "zippedPackage": "solution/filtered-promoted-links.sppkg"
+  }
+}
