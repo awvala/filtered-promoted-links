@@ -97,6 +97,7 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
       })
       .then((viewOptions: IPropertyPaneDropdownOption[]): void => {
         this.views = viewOptions;
+        // console.log(`Views:  ${this.views}`);
         this.viewsDropdownDisabled = !this.properties.listName;
         this.context.propertyPane.refresh();
         this.context.statusRenderer.clearLoadingIndicator(this.domElement);
@@ -170,21 +171,25 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
 
   //  SharePoint API
   private fetchViewOptions(): Promise<IPropertyPaneDropdownOption[]> {
-    const url = this.context.pageContext.web.absoluteUrl + `/_api/Web/Lists(guid'${this.properties.listName}')/Views`;
-
+    const url = this.context.pageContext.web.absoluteUrl + `/_api/Web/Lists(guid'${this.properties.listName}')/items?$select=Category&$orderby=Category asc`;
+    
     if (!this.properties.listName) {
       // resolve to empty options since no list has been selected
       return Promise.resolve();
     } else {
       // console.log(`Start fetchViews: ${url}`);
       return this.fetchLists(url).then((response) => {
+        //console.log(`category response: ${response}`);
         let options: Array<IPropertyPaneDropdownOption> = new Array<IPropertyPaneDropdownOption>();
         let lists: ISPList[] = response.value;
+        // console.log(`Lists: ${lists}`);
         lists.forEach((list: ISPList) => {
-          // console.log("Found list with title = " + list.Title);
-          options.push({ key: list.Id, text: list.Title });
+          options.push({ key: list.Category, text: list.Category });
+          
         });
-
+        options = options.filter((value, index, array) => 
+          !array.filter((v, i) => JSON.stringify(value) == JSON.stringify(v) && i < index).length);
+        // console.log(`Options: ${options}`);
         return options;
       });
     }

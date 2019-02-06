@@ -76,11 +76,11 @@ export default class FilteredPromotedLinks extends React.Component<IFilteredProm
       // get data from SharePoint
       this.props.spHttpClient.get(`${this.props.siteUrl}/_api/Web/Lists(guid'${this.props.listName}')/items?$filter=Category eq 'Category 1'`, SPHttpClient.configurations.v1)
         .then(response => {
-          console.log(`Get SharePoint list data: ${response}`);
+          // console.log(`Get SharePoint list data: ${response}`);
           return response.json();
         })
         .then((items: any) => {
-          console.log(items);
+          // console.log(items);
           const listItems: IFilteredPromotedLinkDataItem[] = [];
           for (let i: number = 0; i < items.value.length; i++) {
             listItems.push({

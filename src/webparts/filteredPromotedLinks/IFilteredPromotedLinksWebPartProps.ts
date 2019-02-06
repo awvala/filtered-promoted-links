@@ -8,6 +8,7 @@ export interface IFilteredPromotedLinksWebPartProps {
    export interface ISPList {
     Title: string;
     Id: string;
+    Category: string;
   }
   
   export interface ISPLists {
