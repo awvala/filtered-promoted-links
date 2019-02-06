@@ -81,6 +81,8 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
       this.lists = data;
       this.listsDropdownDisabled = false;
       this.context.propertyPane.refresh();
+      this.context.statusRenderer.clearLoadingIndicator(this.domElement);
+      this.render();
       //return this.loadViews();
     });
   }
@@ -103,7 +105,7 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
         var options: Array<IPropertyPaneDropdownOption> = new Array<IPropertyPaneDropdownOption>();
         var lists: ISPList[] = response.value;
         lists.forEach((list: ISPList) => {
-            console.log("Found list with title = " + list.Title);
+            // console.log("Found list with title = " + list.Title);
             options.push( { key: list.Id, text: list.Title });
         });
 
