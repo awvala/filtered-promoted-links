@@ -3,7 +3,7 @@ import { SPHttpClient } from '@microsoft/sp-http';
 
 export interface IFilteredPromotedLinksProps {
   listName: string;
-  viewName: string;
+  categoryName: string;
 }
 
 export interface IFilteredPromotedLinksProps extends IFilteredPromotedLinksWebPartProps {

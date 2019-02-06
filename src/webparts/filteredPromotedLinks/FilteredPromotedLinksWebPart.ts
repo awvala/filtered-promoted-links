@@ -23,8 +23,8 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
 
   private lists: IPropertyPaneDropdownOption[];
   private listsDropdownDisabled: boolean = true;
-  private views: IPropertyPaneDropdownOption[];
-  private viewsDropdownDisabled: boolean = true;
+  private categories: IPropertyPaneDropdownOption[];
+  private categoriesDropdownDisabled: boolean = true;
 
   public render(): void {
     const element: React.ReactElement<IFilteredPromotedLinksProps> = React.createElement(
@@ -34,7 +34,7 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
         siteUrl: this.context.pageContext.web.absoluteUrl,
         spHttpClient: this.context.spHttpClient,
         listName: this.properties.listName,
-        viewName: this.properties.viewName
+        categoryName: this.properties.categoryName
       }
     );
 
@@ -65,10 +65,10 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
                   options: this.lists,
                   disabled: this.listsDropdownDisabled
                 }),
-                PropertyPaneDropdown('viewName', {
-                  label: strings.ViewNameFieldLabel,
-                  options: this.views,
-                  disabled: this.viewsDropdownDisabled
+                PropertyPaneDropdown('categoryName', {
+                  label: strings.CategoryNameFieldLabel,
+                  options: this.categories,
+                  disabled: this.categoriesDropdownDisabled
                 })
               ]
             }
@@ -80,7 +80,7 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
 
   protected onPropertyPaneConfigurationStart(): void {
     this.listsDropdownDisabled = !this.lists;
-    this.viewsDropdownDisabled = !this.properties.listName || !this.views;
+    this.categoriesDropdownDisabled = !this.properties.listName || !this.categories;
 
     if (this.lists) {
       return;
@@ -93,12 +93,12 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
         this.lists = data;
         this.listsDropdownDisabled = false;
         this.context.propertyPane.refresh();
-        return this.fetchViewOptions();
+        return this.fetchCategoryOptions();
       })
-      .then((viewOptions: IPropertyPaneDropdownOption[]): void => {
-        this.views = viewOptions;
-        // console.log(`Views:  ${this.views}`);
-        this.viewsDropdownDisabled = !this.properties.listName;
+      .then((categoryOptions: IPropertyPaneDropdownOption[]): void => {
+        this.categories = categoryOptions;
+        // console.log(`categories:  ${this.categories}`);
+        this.categoriesDropdownDisabled = !this.properties.listName;
         this.context.propertyPane.refresh();
         this.context.statusRenderer.clearLoadingIndicator(this.domElement);
         this.render();
@@ -110,25 +110,25 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
       newValue) {
       // push new list value
       super.onPropertyPaneFieldChanged(propertyPath, oldValue, newValue);
-      // get previously selected view
-      const previousView: string = this.properties.viewName;
-      // reset selected view
-      this.properties.viewName = undefined;
-      // push new view value
-      this.onPropertyPaneFieldChanged('viewName', previousView, this.properties.viewName);
-      // disable view selector until new views are loaded
-      this.viewsDropdownDisabled = true;
-      // refresh the view selector control by repainting the property pane
+      // get previously selected category
+      const previouscategory: string = this.properties.categoryName;
+      // reset selected category
+      this.properties.categoryName = undefined;
+      // push new category value
+      this.onPropertyPaneFieldChanged('categoryName', previouscategory, this.properties.categoryName);
+      // disable category selector until new categories are loaded
+      this.categoriesDropdownDisabled = true;
+      // refresh the category selector control by repainting the property pane
       this.context.propertyPane.refresh();
-      // communicate loading views
-      this.context.statusRenderer.displayLoadingIndicator(this.domElement, 'views');
+      // communicate loading categories
+      this.context.statusRenderer.displayLoadingIndicator(this.domElement, 'categories');
 
-      this.fetchViewOptions()
-        .then((viewOptions: IPropertyPaneDropdownOption[]): void => {
-          // store views
-          this.views = viewOptions;
-          // enable view selector
-          this.viewsDropdownDisabled = false;
+      this.fetchCategoryOptions()
+        .then((categoryOptions: IPropertyPaneDropdownOption[]): void => {
+          // store categories
+          this.categories = categoryOptions;
+          // enable category selector
+          this.categoriesDropdownDisabled = false;
           // clear status indicator
           this.context.statusRenderer.clearLoadingIndicator(this.domElement);
           // re-render the web part as clearing the loading indicator removes the web part body
@@ -170,14 +170,14 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
   }
 
   //  SharePoint API
-  private fetchViewOptions(): Promise<IPropertyPaneDropdownOption[]> {
+  private fetchCategoryOptions(): Promise<IPropertyPaneDropdownOption[]> {
     const url = this.context.pageContext.web.absoluteUrl + `/_api/Web/Lists(guid'${this.properties.listName}')/items?$select=Category&$orderby=Category asc`;
     
     if (!this.properties.listName) {
       // resolve to empty options since no list has been selected
       return Promise.resolve();
     } else {
-      // console.log(`Start fetchViews: ${url}`);
+      // console.log(`Start fetchcategories: ${url}`);
       return this.fetchLists(url).then((response) => {
         //console.log(`category response: ${response}`);
         let options: Array<IPropertyPaneDropdownOption> = new Array<IPropertyPaneDropdownOption>();
@@ -185,8 +185,8 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
         // console.log(`Lists: ${lists}`);
         lists.forEach((list: ISPList) => {
           options.push({ key: list.Category, text: list.Category });
-          
         });
+        // Remove duplicate Categories
         options = options.filter((value, index, array) => 
           !array.filter((v, i) => JSON.stringify(value) == JSON.stringify(v) && i < index).length);
         // console.log(`Options: ${options}`);
@@ -199,8 +199,8 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
 
 /*
 // Static method
-private loadViews(): Promise<IPropertyPaneDropdownOption[]> {
-  console.log ("start LoadViews");
+private loadcategories(): Promise<IPropertyPaneDropdownOption[]> {
+  console.log ("start Loadcategories");
   if (!this.properties.listName) {
     // resolve to empty options since no list has been selected
     return Promise.resolve();
@@ -210,7 +210,7 @@ private loadViews(): Promise<IPropertyPaneDropdownOption[]> {
 
   return new Promise<IPropertyPaneDropdownOption[]>((resolve: (options: IPropertyPaneDropdownOption[]) => void, reject: (error: any) => void) => {
     setTimeout(() => {
-      const views = {
+      const categories = {
         sharedDocuments: [
           {
             key: 'spfx_presentation.pptx',
@@ -232,8 +232,8 @@ private loadViews(): Promise<IPropertyPaneDropdownOption[]> {
           }
         ]
       };
-      resolve(views[wp.properties.listName]);
+      resolve(categories[wp.properties.listName]);
     }, 2000);
-    // console.log("In LoadViews method: "+ this.views);
+    // console.log("In Loadcategories method: "+ this.categories);
   });
 }*/

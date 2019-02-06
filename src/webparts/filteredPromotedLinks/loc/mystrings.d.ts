@@ -2,7 +2,7 @@ declare interface IFilteredPromotedLinksWebPartStrings {
   PropertyPaneDescription: string;
   BasicGroupName: string;
   ListNameFieldLabel: string;
-  ViewNameFieldLabel: string;
+  CategoryNameFieldLabel: string;
 }
 
 declare module 'FilteredPromotedLinksWebPartStrings' {
