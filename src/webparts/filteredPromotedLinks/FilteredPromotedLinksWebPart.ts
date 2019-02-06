@@ -4,7 +4,6 @@ import { Version } from '@microsoft/sp-core-library';
 import {
   BaseClientSideWebPart,
   IPropertyPaneConfiguration,
-  PropertyPaneTextField,
   PropertyPaneDropdown,
   IPropertyPaneDropdownOption
 } from '@microsoft/sp-webpart-base';
@@ -14,6 +13,7 @@ import FilteredPromotedLinks from './components/FilteredPromotedLinks';
 import { IFilteredPromotedLinksProps } from './components/IFilteredPromotedLinksProps';
 import { IFilteredPromotedLinksWebPartProps, ISPLists, ISPList } from './IFilteredPromotedLinksWebPartProps';
 import { SPHttpClient, SPHttpClientResponse } from '@microsoft/sp-http';
+import { Environment, EnvironmentType } from '@microsoft/sp-core-library';
 
 export interface IFilteredPromotedLinksWebPartProps {
   description: string;
@@ -30,6 +30,9 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
     const element: React.ReactElement<IFilteredPromotedLinksProps> = React.createElement(
       FilteredPromotedLinks,
       {
+        isWorkbench: Environment.type == EnvironmentType.Local,
+        siteUrl: this.context.pageContext.web.absoluteUrl,
+        spHttpClient: this.context.spHttpClient,
         listName: this.properties.listName,
         viewName: this.properties.viewName
       }

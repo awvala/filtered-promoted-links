@@ -1,26 +1,106 @@
 import * as React from 'react';
 import styles from './FilteredPromotedLinks.module.scss';
-import { IFilteredPromotedLinksProps } from './IFilteredPromotedLinksProps';
+import { IFilteredPromotedLinksProps, IFilteredPromotedLinkDataItem } from './IFilteredPromotedLinksProps';
+import FilteredPromotedLinkItem, { IFilteredPromotedLinkItemProps } from './FilteredPromotedLinksItem';
 import { escape } from '@microsoft/sp-lodash-subset';
+import { SPHttpClient } from '@microsoft/sp-http';
 
-export default class FilteredPromotedLinks extends React.Component<IFilteredPromotedLinksProps, {}> {
+export interface IFilteredPromotedLinksState {
+  listData: IFilteredPromotedLinkDataItem[];
+}
+
+export default class FilteredPromotedLinks extends React.Component<IFilteredPromotedLinksProps, IFilteredPromotedLinksState> {
+
+  constructor(props: IFilteredPromotedLinksProps, state: IFilteredPromotedLinksState) {
+    super(props);
+
+    this.state = { listData: [] };
+  }
+
   public render(): React.ReactElement<IFilteredPromotedLinksProps> {
     return (
-      <div className={ styles.filteredPromotedLinks }>
-        <div className={ styles.container }>
-        <div className={`ms-Grid-row ms-bgColor-themeDark ms-fontColor-white ${styles.row}`}>
-           <div className="ms-Grid-col ms-u-lg10 ms-u-xl8 ms-u-xlPush2 ms-u-lgPush1">
-             <span className="ms-font-xl ms-fontColor-white">Welcome to SharePoint!</span>
-             <p className="ms-font-l ms-fontColor-white">Customize SharePoint experiences using web parts.</p>
-             <p className="ms-font-l ms-fontColor-white">{escape(this.props.listName)}</p>
-             <p className="ms-font-l ms-fontColor-white">{escape(this.props.viewName)}</p>
-             <a href="https://aka.ms/spfx" className={styles.button}>
-               <span className={styles.label}>Learn more</span>
-             </a>
-           </div>
-         </div>
+      <div className={styles.filteredPromotedLinks}>
+        <div className={styles.container}>
+
+          {
+            this.state.listData.map((item: IFilteredPromotedLinkDataItem) => {
+              return <FilteredPromotedLinkItem
+                title={item.Title}
+                description={item.Description}
+                imageUrl={item.ImageUrl}
+                href={item.LinkUrl}
+                owner={item.Owner} />;
+
+            })
+          }
+
+          <div style={{ clear: 'both' }}></div>
         </div>
       </div>
     );
+  }
+
+  public componentDidMount(): void {
+    this.loadData();
+  }
+
+  private loadData(): void {
+    if (this.props.isWorkbench) {
+      // get mock data in Workbench
+      this.setState({
+        listData: [
+          {
+            Title: "Test Item",
+            Description: "Test description",
+            ImageUrl: "https://media-cdn.tripadvisor.com/media/photo-s/04/a8/17/f5/el-arco.jpg",
+            LinkUrl: "http://www.google.com",
+            Owner: "Jim Davis"
+          },
+          {
+            Title: "Test Item with a Long Title",
+            Description: "Test description",
+            ImageUrl: "https://pgcpsmess.files.wordpress.com/2014/04/330277-red-fox-kelly-lyon-760x506.jpg",
+            LinkUrl: "http://www.google.com",
+            Owner: "Jim Davis"
+          },
+          {
+            Title: "Test Item",
+            Description: "Test description",
+            ImageUrl: "https://s-media-cache-ak0.pinimg.com/736x/d6/d4/d7/d6d4d7224687ca3de4a160f5264b5b99.jpg",
+            LinkUrl: "Test item with a long description for display.",
+            Owner: "Jim Davis"
+          }
+        ]
+      });
+    } else {
+      // get data from SharePoint
+      this.props.spHttpClient.get(`${this.props.siteUrl}/_api/Web/Lists(guid'${this.props.listName}')/Views/`, SPHttpClient.configurations.v1)
+        .then(response => {
+          console.log(response);
+          return response.json();
+        })
+        .then((items: any) => {
+          console.log(items);
+          const listItems: IFilteredPromotedLinkDataItem[] = [];
+          for (let i: number = 0; i < items.value.length; i++) {
+            listItems.push({
+              Title: items.value[i].Title,
+              Description: items.value[i].Description,
+              ImageUrl: items.value[i].BackgroundImageLocation.Url,
+              LinkUrl: items.value[i].LinkLocation.Url,
+              Owner: items.value[i].OwnerId
+            });
+          }
+          this.setState({ listData: listItems });
+        }, (err: any) => {
+          console.log(err);
+        });
+    }
+  }
+
+  public componentDidUpdate(prevProps: IFilteredPromotedLinksProps, prevState: IFilteredPromotedLinksState, prevContext: any) {
+    if (prevProps.listName != this.props.listName) {
+      this.loadData();
+    }
   }
 }
