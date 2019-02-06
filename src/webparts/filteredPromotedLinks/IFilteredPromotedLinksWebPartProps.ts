@@ -1,5 +1,6 @@
 export interface IFilteredPromotedLinksWebPartProps {
     listName: string;
+    viewName: string;
    }
 
    export interface ISPList {

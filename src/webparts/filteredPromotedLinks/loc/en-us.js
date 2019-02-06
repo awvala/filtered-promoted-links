@@ -2,6 +2,7 @@ define([], function() {
   return {
     "PropertyPaneDescription": "Description",
     "BasicGroupName": "Group Name",
-    "ListNameFieldLabel": "List"
+    "ListNameFieldLabel": "List",
+    "ViewNameFieldLabel": "View"
   }
 });

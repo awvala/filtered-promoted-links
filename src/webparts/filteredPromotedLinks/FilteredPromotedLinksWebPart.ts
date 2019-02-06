@@ -23,12 +23,15 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
 
   private lists: IPropertyPaneDropdownOption[];
   private listsDropdownDisabled: boolean = true;
+  private views: IPropertyPaneDropdownOption[];
+  private viewsDropdownDisabled: boolean = true;
 
   public render(): void {
     const element: React.ReactElement<IFilteredPromotedLinksProps > = React.createElement(
       FilteredPromotedLinks,
       {
-        listName: this.properties.listName
+        listName: this.properties.listName,
+        viewName: this.properties.viewName
       }
     );
 
@@ -58,6 +61,11 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
                   label: strings.ListNameFieldLabel,
                   options: this.lists,
                   disabled: this.listsDropdownDisabled
+                }),
+                PropertyPaneDropdown('viewName', {
+                  label: strings.ViewNameFieldLabel,
+                  options: this.views,
+                  disabled: this.viewsDropdownDisabled
                 })
               ]
             }

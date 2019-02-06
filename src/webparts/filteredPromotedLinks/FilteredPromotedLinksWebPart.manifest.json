@@ -20,7 +20,8 @@
     "description": { "default": "Filtered Promoted Links description" },
     "officeFabricIconFontName": "PictureTile",
     "properties": {
-      "listName": ""
+      "listName": "",
+      "viewName": ""
     }
   }]
 }
