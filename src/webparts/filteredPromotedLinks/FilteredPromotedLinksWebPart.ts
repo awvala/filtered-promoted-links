@@ -90,7 +90,7 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
         this.lists = data;
         this.listsDropdownDisabled = false;
         this.context.propertyPane.refresh();
-        return this.loadViews();
+        return this.fetchViewOptions();
       })
       .then((viewOptions: IPropertyPaneDropdownOption[]): void => {
         this.views = viewOptions;
@@ -119,11 +119,10 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
       // communicate loading views
       this.context.statusRenderer.displayLoadingIndicator(this.domElement, 'views');
 
-      this.loadViews()
+      this.fetchViewOptions()
         .then((viewOptions: IPropertyPaneDropdownOption[]): void => {
           // store views
           this.views = viewOptions;
-          console.log(viewOptions);
           // enable view selector
           this.viewsDropdownDisabled = false;
           // clear status indicator
@@ -167,74 +166,66 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
   }
 
   //  SharePoint API
-  private loadViews(): Promise<IPropertyPaneDropdownOption[]> {
+  private fetchViewOptions(): Promise<IPropertyPaneDropdownOption[]> {
     const url = this.context.pageContext.web.absoluteUrl + `/_api/Web/Lists(guid'${this.properties.listName}')/Views`;
-
-    console.log("start LoadViews");
 
     if (!this.properties.listName) {
       // resolve to empty options since no list has been selected
       return Promise.resolve();
     } else {
-      // get data from SharePoint
-      return this.context.spHttpClient.get(url, SPHttpClient.configurations.v1)
-        .then(response => {
-          console.log(`View API Return: '${response}'`);
-          return response.json();
-        });
-        
-        /*.then((views: any) => {
-          console.log(views);
-          let options: Array<IPropertyPaneDropdownOption> = new Array<IPropertyPaneDropdownOption>();
-          const views = ISPLists[] = views.value;
-          views.forEach((view: ISPList) => {
-            PushSubscriptionOptions.push({ key:List.Id, text:list.Title});
-          });
-          return options;
-        })*/
+    // console.log(`Start fetchViews: ${url}`);
+    return this.fetchLists(url).then((response) => {
+      let options: Array<IPropertyPaneDropdownOption> = new Array<IPropertyPaneDropdownOption>();
+      let lists: ISPList[] = response.value;
+      lists.forEach((list: ISPList) => {
+        // console.log("Found list with title = " + list.Title);
+        options.push({ key: list.Id, text: list.Title });
+      });
 
-    }
+      return options;
+    })
+  }
   }
 
-  /*
-  // Static method
-  private loadViews(): Promise<IPropertyPaneDropdownOption[]> {
-    console.log ("start LoadViews");
-    if (!this.properties.listName) {
-      // resolve to empty options since no list has been selected
-      return Promise.resolve();
-    } 
-
-    const wp: FilteredPromotedLinksWebPart = this;
-
-    return new Promise<IPropertyPaneDropdownOption[]>((resolve: (options: IPropertyPaneDropdownOption[]) => void, reject: (error: any) => void) => {
-      setTimeout(() => {
-        const views = {
-          sharedDocuments: [
-            {
-              key: 'spfx_presentation.pptx',
-              text: 'SPFx for the masses'
-            },
-            {
-              key: 'hello-world.spapp',
-              text: 'hello-world.spapp'
-            }
-          ],
-          myDocuments: [
-            {
-              key: 'isaiah_cv.docx',
-              text: 'Isaiah CV'
-            },
-            {
-              key: 'isaiah_expenses.xlsx',
-              text: 'Isaiah Expenses'
-            }
-          ]
-        };
-        resolve(views[wp.properties.listName]);
-      }, 2000);
-      // console.log("In LoadViews method: "+ this.views);
-    });
-  }*/
-
 }
+
+/*
+// Static method
+private loadViews(): Promise<IPropertyPaneDropdownOption[]> {
+  console.log ("start LoadViews");
+  if (!this.properties.listName) {
+    // resolve to empty options since no list has been selected
+    return Promise.resolve();
+  }
+
+  const wp: FilteredPromotedLinksWebPart = this;
+
+  return new Promise<IPropertyPaneDropdownOption[]>((resolve: (options: IPropertyPaneDropdownOption[]) => void, reject: (error: any) => void) => {
+    setTimeout(() => {
+      const views = {
+        sharedDocuments: [
+          {
+            key: 'spfx_presentation.pptx',
+            text: 'SPFx for the masses'
+          },
+          {
+            key: 'hello-world.spapp',
+            text: 'hello-world.spapp'
+          }
+        ],
+        myDocuments: [
+          {
+            key: 'isaiah_cv.docx',
+            text: 'Isaiah CV'
+          },
+          {
+            key: 'isaiah_expenses.xlsx',
+            text: 'Isaiah Expenses'
+          }
+        ]
+      };
+      resolve(views[wp.properties.listName]);
+    }, 2000);
+    // console.log("In LoadViews method: "+ this.views);
+  });
+}*/
