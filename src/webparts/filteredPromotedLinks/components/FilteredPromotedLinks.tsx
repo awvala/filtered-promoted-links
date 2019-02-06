@@ -13,6 +13,7 @@ export default class FilteredPromotedLinks extends React.Component<IFilteredProm
              <span className="ms-font-xl ms-fontColor-white">Welcome to SharePoint!</span>
              <p className="ms-font-l ms-fontColor-white">Customize SharePoint experiences using web parts.</p>
              <p className="ms-font-l ms-fontColor-white">{escape(this.props.listName)}</p>
+             <p className="ms-font-l ms-fontColor-white">{escape(this.props.viewName)}</p>
              <a href="https://aka.ms/spfx" className={styles.button}>
                <span className={styles.label}>Learn more</span>
              </a>
