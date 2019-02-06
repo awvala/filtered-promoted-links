@@ -27,7 +27,7 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
   private viewsDropdownDisabled: boolean = true;
 
   public render(): void {
-    const element: React.ReactElement<IFilteredPromotedLinksProps > = React.createElement(
+    const element: React.ReactElement<IFilteredPromotedLinksProps> = React.createElement(
       FilteredPromotedLinks,
       {
         listName: this.properties.listName,
@@ -86,24 +86,24 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
     this.context.statusRenderer.displayLoadingIndicator(this.domElement, 'lists');
 
     this.fetchOptions()
-    .then((data: IPropertyPaneDropdownOption[]) : Promise<IPropertyPaneDropdownOption[]> => {
-      this.lists = data;
-      this.listsDropdownDisabled = false;
-      this.context.propertyPane.refresh();
-      return this.loadViews();
-    })
-    .then((viewOptions: IPropertyPaneDropdownOption[]): void => {
-      this.views = viewOptions;
-      this.viewsDropdownDisabled = !this.properties.listName;
-      this.context.propertyPane.refresh();
-      this.context.statusRenderer.clearLoadingIndicator(this.domElement);
-      this.render();
-    });
+      .then((data: IPropertyPaneDropdownOption[]): Promise<IPropertyPaneDropdownOption[]> => {
+        this.lists = data;
+        this.listsDropdownDisabled = false;
+        this.context.propertyPane.refresh();
+        return this.loadViews();
+      })
+      .then((viewOptions: IPropertyPaneDropdownOption[]): void => {
+        this.views = viewOptions;
+        this.viewsDropdownDisabled = !this.properties.listName;
+        this.context.propertyPane.refresh();
+        this.context.statusRenderer.clearLoadingIndicator(this.domElement);
+        this.render();
+      });
   }
 
   protected onPropertyPaneFieldChanged(propertyPath: string, oldValue: any, newValue: any): void {
     if (propertyPath === 'listName' &&
-        newValue) {
+      newValue) {
       // push new list value
       super.onPropertyPaneFieldChanged(propertyPath, oldValue, newValue);
       // get previously selected view
@@ -118,7 +118,7 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
       this.context.propertyPane.refresh();
       // communicate loading views
       this.context.statusRenderer.displayLoadingIndicator(this.domElement, 'views');
- 
+
       this.loadViews()
         .then((viewOptions: IPropertyPaneDropdownOption[]): void => {
           // store views
@@ -132,7 +132,7 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
           this.render();
           // refresh the item selector control by repainting the property pane
           this.context.propertyPane.refresh();
-          
+
         });
     }
     else {
@@ -140,38 +140,70 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
     }
   }
 
-  private fetchLists(url: string) : Promise<ISPLists> {
+  private fetchLists(url: string): Promise<ISPLists> {
     return this.context.spHttpClient.get(url, SPHttpClient.configurations.v1).then((response: SPHttpClientResponse) => {
-        if (response.ok) {
-          return response.json();
-        } else {
-          console.log("WARNING - failed to hit URL " + url + ". Error = " + response.statusText);
-          return null;
-        }
-      });
-  }
-
-  private fetchOptions(): Promise<IPropertyPaneDropdownOption[]> {
-    var url = this.context.pageContext.web.absoluteUrl + `/_api/web/lists?$filter=BaseTemplate eq 170 and Hidden eq false`;
-
-    return this.fetchLists(url).then((response) => {
-        var options: Array<IPropertyPaneDropdownOption> = new Array<IPropertyPaneDropdownOption>();
-        var lists: ISPList[] = response.value;
-        lists.forEach((list: ISPList) => {
-            // console.log("Found list with title = " + list.Title);
-            options.push( { key: list.Id, text: list.Title });
-        });
-
-        return options;
+      if (response.ok) {
+        return response.json();
+      } else {
+        console.log("WARNING - failed to hit URL " + url + ". Error = " + response.statusText);
+        return null;
+      }
     });
   }
 
+  private fetchOptions(): Promise<IPropertyPaneDropdownOption[]> {
+    const url = this.context.pageContext.web.absoluteUrl + `/_api/web/lists?$filter=BaseTemplate eq 170 and Hidden eq false`;
+
+    return this.fetchLists(url).then((response) => {
+      let options: Array<IPropertyPaneDropdownOption> = new Array<IPropertyPaneDropdownOption>();
+      let lists: ISPList[] = response.value;
+      lists.forEach((list: ISPList) => {
+        // console.log("Found list with title = " + list.Title);
+        options.push({ key: list.Id, text: list.Title });
+      });
+
+      return options;
+    });
+  }
+
+  //  SharePoint API
+  private loadViews(): Promise<IPropertyPaneDropdownOption[]> {
+    const url = this.context.pageContext.web.absoluteUrl + `/_api/Web/Lists(guid'${this.properties.listName}')/Views`;
+
+    console.log("start LoadViews");
+
+    if (!this.properties.listName) {
+      // resolve to empty options since no list has been selected
+      return Promise.resolve();
+    } else {
+      // get data from SharePoint
+      return this.context.spHttpClient.get(url, SPHttpClient.configurations.v1)
+        .then(response => {
+          console.log(`View API Return: '${response}'`);
+          return response.json();
+        });
+        
+        /*.then((views: any) => {
+          console.log(views);
+          let options: Array<IPropertyPaneDropdownOption> = new Array<IPropertyPaneDropdownOption>();
+          const views = ISPLists[] = views.value;
+          views.forEach((view: ISPList) => {
+            PushSubscriptionOptions.push({ key:List.Id, text:list.Title});
+          });
+          return options;
+        })*/
+
+    }
+  }
+
+  /*
+  // Static method
   private loadViews(): Promise<IPropertyPaneDropdownOption[]> {
     console.log ("start LoadViews");
     if (!this.properties.listName) {
       // resolve to empty options since no list has been selected
       return Promise.resolve();
-    }
+    } 
 
     const wp: FilteredPromotedLinksWebPart = this;
 
@@ -201,8 +233,8 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
         };
         resolve(views[wp.properties.listName]);
       }, 2000);
-      console.log("In LoadViews method: "+ this.views);
+      // console.log("In LoadViews method: "+ this.views);
     });
-  }
+  }*/
 
 }
