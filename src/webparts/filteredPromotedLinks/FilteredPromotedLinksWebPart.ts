@@ -77,6 +77,7 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
 
   protected onPropertyPaneConfigurationStart(): void {
     this.listsDropdownDisabled = !this.lists;
+    this.viewsDropdownDisabled = !this.properties.listName || !this.views;
 
     if (this.lists) {
       return;
@@ -85,14 +86,58 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
     this.context.statusRenderer.displayLoadingIndicator(this.domElement, 'lists');
 
     this.fetchOptions()
-    .then((data: IPropertyPaneDropdownOption[]) /*: Promise<IPropertyPaneDropdownOption[]>*/ => {
+    .then((data: IPropertyPaneDropdownOption[]) : Promise<IPropertyPaneDropdownOption[]> => {
       this.lists = data;
       this.listsDropdownDisabled = false;
       this.context.propertyPane.refresh();
+      return this.loadViews();
+    })
+    .then((viewOptions: IPropertyPaneDropdownOption[]): void => {
+      this.views = viewOptions;
+      this.viewsDropdownDisabled = !this.properties.listName;
+      this.context.propertyPane.refresh();
       this.context.statusRenderer.clearLoadingIndicator(this.domElement);
       this.render();
-      //return this.loadViews();
     });
+  }
+
+  protected onPropertyPaneFieldChanged(propertyPath: string, oldValue: any, newValue: any): void {
+    if (propertyPath === 'listName' &&
+        newValue) {
+      // push new list value
+      super.onPropertyPaneFieldChanged(propertyPath, oldValue, newValue);
+      // get previously selected view
+      const previousView: string = this.properties.viewName;
+      // reset selected view
+      this.properties.viewName = undefined;
+      // push new view value
+      this.onPropertyPaneFieldChanged('viewName', previousView, this.properties.viewName);
+      // disable view selector until new views are loaded
+      this.viewsDropdownDisabled = true;
+      // refresh the view selector control by repainting the property pane
+      this.context.propertyPane.refresh();
+      // communicate loading views
+      this.context.statusRenderer.displayLoadingIndicator(this.domElement, 'views');
+ 
+      this.loadViews()
+        .then((viewOptions: IPropertyPaneDropdownOption[]): void => {
+          // store views
+          this.views = viewOptions;
+          console.log(viewOptions);
+          // enable view selector
+          this.viewsDropdownDisabled = false;
+          // clear status indicator
+          this.context.statusRenderer.clearLoadingIndicator(this.domElement);
+          // re-render the web part as clearing the loading indicator removes the web part body
+          this.render();
+          // refresh the item selector control by repainting the property pane
+          this.context.propertyPane.refresh();
+          
+        });
+    }
+    else {
+      super.onPropertyPaneFieldChanged(propertyPath, oldValue, newValue);
+    }
   }
 
   private fetchLists(url: string) : Promise<ISPLists> {
@@ -120,4 +165,44 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
         return options;
     });
   }
+
+  private loadViews(): Promise<IPropertyPaneDropdownOption[]> {
+    console.log ("start LoadViews");
+    if (!this.properties.listName) {
+      // resolve to empty options since no list has been selected
+      return Promise.resolve();
+    }
+
+    const wp: FilteredPromotedLinksWebPart = this;
+
+    return new Promise<IPropertyPaneDropdownOption[]>((resolve: (options: IPropertyPaneDropdownOption[]) => void, reject: (error: any) => void) => {
+      setTimeout(() => {
+        const views = {
+          sharedDocuments: [
+            {
+              key: 'spfx_presentation.pptx',
+              text: 'SPFx for the masses'
+            },
+            {
+              key: 'hello-world.spapp',
+              text: 'hello-world.spapp'
+            }
+          ],
+          myDocuments: [
+            {
+              key: 'isaiah_cv.docx',
+              text: 'Isaiah CV'
+            },
+            {
+              key: 'isaiah_expenses.xlsx',
+              text: 'Isaiah Expenses'
+            }
+          ]
+        };
+        resolve(views[wp.properties.listName]);
+      }, 2000);
+      console.log("In LoadViews method: "+ this.views);
+    });
+  }
+
 }
