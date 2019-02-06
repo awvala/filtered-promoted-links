@@ -173,18 +173,18 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
       // resolve to empty options since no list has been selected
       return Promise.resolve();
     } else {
-    // console.log(`Start fetchViews: ${url}`);
-    return this.fetchLists(url).then((response) => {
-      let options: Array<IPropertyPaneDropdownOption> = new Array<IPropertyPaneDropdownOption>();
-      let lists: ISPList[] = response.value;
-      lists.forEach((list: ISPList) => {
-        // console.log("Found list with title = " + list.Title);
-        options.push({ key: list.Id, text: list.Title });
-      });
+      // console.log(`Start fetchViews: ${url}`);
+      return this.fetchLists(url).then((response) => {
+        let options: Array<IPropertyPaneDropdownOption> = new Array<IPropertyPaneDropdownOption>();
+        let lists: ISPList[] = response.value;
+        lists.forEach((list: ISPList) => {
+          // console.log("Found list with title = " + list.Title);
+          options.push({ key: list.Id, text: list.Title });
+        });
 
-      return options;
-    })
-  }
+        return options;
+      });
+    }
   }
 
 }
