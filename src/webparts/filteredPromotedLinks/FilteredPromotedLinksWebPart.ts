@@ -26,6 +26,16 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
   private categories: IPropertyPaneDropdownOption[];
   private categoriesDropdownDisabled: boolean = true;
 
+    // TODO:  replace onInit method
+    public onInit<T>(): Promise<T> {
+      this.fetchOptions()
+      .then((data) => {
+        this.lists = data;
+      });
+  
+      return Promise.resolve();
+    }
+
   public render(): void {
     const element: React.ReactElement<IFilteredPromotedLinksProps> = React.createElement(
       FilteredPromotedLinks,
@@ -97,7 +107,6 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
       })
       .then((categoryOptions: IPropertyPaneDropdownOption[]): void => {
         this.categories = categoryOptions;
-        // console.log(`categories:  ${this.categories}`);
         this.categoriesDropdownDisabled = !this.properties.listName;
         this.context.propertyPane.refresh();
         this.context.statusRenderer.clearLoadingIndicator(this.domElement);

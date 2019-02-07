@@ -74,9 +74,8 @@ export default class FilteredPromotedLinks extends React.Component<IFilteredProm
       });
     } else {
       // get data from SharePoint
-      this.props.spHttpClient.get(`${this.props.siteUrl}/_api/Web/Lists(guid'${this.props.listName}')/items?$filter=Category eq '${this.props.categoryName}'`, SPHttpClient.configurations.v1)
+      this.props.spHttpClient.get(`${this.props.siteUrl}/_api/Web/Lists(guid'${this.props.listName}')/items?$select=Title,Description,BackgroundImageLocation,LinkLocation,Owner/Title&$expand=Owner/Id&$filter=Category eq '${this.props.categoryName}'`, SPHttpClient.configurations.v1)
         .then(response => {
-          // console.log(`Get SharePoint list data: ${response}`);
           return response.json();
         })
         .then((items: any) => {
@@ -88,7 +87,7 @@ export default class FilteredPromotedLinks extends React.Component<IFilteredProm
               Description: items.value[i].Description,
               ImageUrl: items.value[i].BackgroundImageLocation.Url,
               LinkUrl: items.value[i].LinkLocation.Url,
-              Owner: items.value[i].OwnerId
+              Owner: items.value[i].Owner.Title
             });
           }
           this.setState({ listData: listItems });
@@ -99,7 +98,8 @@ export default class FilteredPromotedLinks extends React.Component<IFilteredProm
   }
 
   public componentDidUpdate(prevProps: IFilteredPromotedLinksProps, prevState: IFilteredPromotedLinksState, prevContext: any) {
-    if (prevProps.listName != this.props.listName) {
+    if (prevProps.categoryName != this.props.categoryName 
+      || prevProps.listName != this.props.listName && (this.props.categoryName && this.props.listName)) {
       this.loadData();
     }
   }
