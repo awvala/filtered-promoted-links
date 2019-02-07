@@ -86,6 +86,7 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
       return;
     }
 
+    // Disable 02/07/19 as render method returned a blank.
     // this.context.statusRenderer.displayLoadingIndicator(this.domElement, 'lists');
 
     this.fetchOptions()
@@ -119,7 +120,7 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
       this.categoriesDropdownDisabled = true;
       // refresh the category selector control by repainting the property pane
       this.context.propertyPane.refresh();
-      // communicate loading categories
+      // communicate loading categories // Disable 02/07/19 as render method returned a blank.
       // this.context.statusRenderer.displayLoadingIndicator(this.domElement, 'categories');
 
       this.fetchCategoryOptions()
@@ -134,7 +135,6 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
           this.render();
           // refresh the item selector control by repainting the property pane
           this.context.propertyPane.refresh();
-
         });
     }
     else {
