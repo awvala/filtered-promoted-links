@@ -86,7 +86,7 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
       return;
     }
 
-    this.context.statusRenderer.displayLoadingIndicator(this.domElement, 'lists');
+    // this.context.statusRenderer.displayLoadingIndicator(this.domElement, 'lists');
 
     this.fetchOptions()
       .then((data: IPropertyPaneDropdownOption[]): Promise<IPropertyPaneDropdownOption[]> => {
@@ -120,7 +120,7 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
       // refresh the category selector control by repainting the property pane
       this.context.propertyPane.refresh();
       // communicate loading categories
-      this.context.statusRenderer.displayLoadingIndicator(this.domElement, 'categories');
+      // this.context.statusRenderer.displayLoadingIndicator(this.domElement, 'categories');
 
       this.fetchCategoryOptions()
         .then((categoryOptions: IPropertyPaneDropdownOption[]): void => {
