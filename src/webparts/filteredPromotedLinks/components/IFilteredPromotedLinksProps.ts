@@ -1,15 +1,17 @@
 import { IFilteredPromotedLinksWebPartProps } from '../IFilteredPromotedLinksWebPartProps';
 import { SPHttpClient } from '@microsoft/sp-http';
-
-export interface IFilteredPromotedLinksProps {
-  listName: string;
-  viewName: string;
-}
+import { WebPartContext } from '@microsoft/sp-webpart-base';
 
 export interface IFilteredPromotedLinksProps extends IFilteredPromotedLinksWebPartProps {
   isWorkbench: boolean;
   siteUrl: string;
   spHttpClient: SPHttpClient;
+  //context: WebPartContext;
+}
+
+export interface IFilteredPromotedLinksProps {
+  listName: string;
+  filterName: string;
 }
 
 export interface IFilteredPromotedLinkDataItem {

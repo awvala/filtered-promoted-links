@@ -1,8 +1,9 @@
 define([], function() {
   return {
-    "PropertyPaneDescription": "Description",
-    "BasicGroupName": "Group Name",
+    "PropertyPaneDescription": "A Promoted Links list utilizing an Owner People Picker field and a Filter Choice field to filter links.",
+    "BasicGroupName": "Promoted Links Configuration",
     "ListNameFieldLabel": "List",
-    "ViewNameFieldLabel": "View"
+    "FilterNameFieldLabel": "Filter",
+    "DescriptionFieldLabel": "Web Part Title"
   }
 });

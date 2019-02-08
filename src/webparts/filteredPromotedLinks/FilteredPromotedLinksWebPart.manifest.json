@@ -17,11 +17,12 @@
     "groupId": "5c03119e-3074-46fd-976b-c60198311f70", // Other
     "group": { "default": "Other" },
     "title": { "default": "Filtered Promoted Links" },
-    "description": { "default": "Filtered Promoted Links description" },
+    "description": { "default": "A Promoted Links web part utilizing an Owner People Picker field and a Filter Choice field." },
     "officeFabricIconFontName": "PictureTile",
     "properties": {
       "listName": "",
-      "viewName": ""
+      "filterName": "",
+      "descriptionName": ""
     }
   }]
 }
