@@ -6,7 +6,7 @@ export interface IFilteredPromotedLinksProps extends IFilteredPromotedLinksWebPa
   isWorkbench: boolean;
   siteUrl: string;
   spHttpClient: SPHttpClient;
-  context: WebPartContext;
+  //context: WebPartContext;
 }
 
 export interface IFilteredPromotedLinksProps {

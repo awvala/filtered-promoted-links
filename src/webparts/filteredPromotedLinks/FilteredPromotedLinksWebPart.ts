@@ -135,6 +135,8 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
           this.filters = filterOptions;
           // enable filter selector
           this.filtersDropdownDisabled = false;
+          // clear Filter property pane field
+          this.properties.filterName = "";
           // clear status indicator
           this.context.statusRenderer.clearLoadingIndicator(this.domElement);
           // re-render the web part as clearing the loading indicator removes the web part body

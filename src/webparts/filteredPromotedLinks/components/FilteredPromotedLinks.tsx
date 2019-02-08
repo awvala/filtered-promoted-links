@@ -17,6 +17,8 @@ export default class FilteredPromotedLinks extends React.Component<IFilteredProm
 
   constructor(props: IFilteredPromotedLinksProps, state: IFilteredPromotedLinksState) {
     super(props);
+    
+    this._onConfigure = this._onConfigure.bind(this);
 
     this.state = {
       listData: [],
@@ -96,11 +98,11 @@ export default class FilteredPromotedLinks extends React.Component<IFilteredProm
   public componentDidUpdate(prevProps: IFilteredPromotedLinksProps, prevState: IFilteredPromotedLinksState, prevContext: any) {
     // console.log(`current listname ${this.props.listName} previous ${prevProps.listName}`);
     if (prevProps.listName != this.props.listName || prevProps.filterName != this.props.filterName) {
-      console.log(`SUCCESS! current listName ${this.props.listName} != previous ${prevProps.listName} || filterName ${this.props.filterName} != previous ${prevProps.filterName} `);
+      // console.log(`SUCCESS! current listName ${this.props.listName} != previous ${prevProps.listName} || filterName ${this.props.filterName} != previous ${prevProps.filterName} `);
       if (this.props.listName !== null && this.props.listName !== "") {
       //if (prevProps.filterName != this.props.filterName
       //  || prevProps.listName != this.props.listName && (this.props.filterName && this.props.listName)) {
-          console.log(`list name ${this.props.listName} is not null && ${this.props.listName} is !== to empty string`);
+          // console.log(`list name ${this.props.listName} is not null && ${this.props.listName} is !== to empty string`);
         this.loadData();
       } else {
         this.setState({
@@ -111,7 +113,7 @@ export default class FilteredPromotedLinks extends React.Component<IFilteredProm
   }
 
   private loadData(): void {
-    console.log("loading data");
+    // console.log("loading data");
     if (this.props.isWorkbench) {
       // get mock data in Workbench
       this.setState({
