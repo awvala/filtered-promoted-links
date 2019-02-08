@@ -1,12 +1,16 @@
 import * as React from 'react';
 import styles from './FilteredPromotedLinks.module.scss';
 import { IFilteredPromotedLinksProps, IFilteredPromotedLinkDataItem } from './IFilteredPromotedLinksProps';
+import { Spinner, SpinnerSize } from 'office-ui-fabric-react/lib/components/Spinner';
+import { Placeholder } from '@pnp/spfx-controls-react/lib/Placeholder';
 import FilteredPromotedLinkItem, { IFilteredPromotedLinkItemProps } from './FilteredPromotedLinksItem';
 import { escape } from '@microsoft/sp-lodash-subset';
 import { SPHttpClient } from '@microsoft/sp-http';
 
 export interface IFilteredPromotedLinksState {
   listData: IFilteredPromotedLinkDataItem[];
+  loading?: boolean;
+  showPlaceholder?: boolean;
 }
 
 export default class FilteredPromotedLinks extends React.Component<IFilteredPromotedLinksProps, IFilteredPromotedLinksState> {
@@ -14,37 +18,100 @@ export default class FilteredPromotedLinks extends React.Component<IFilteredProm
   constructor(props: IFilteredPromotedLinksProps, state: IFilteredPromotedLinksState) {
     super(props);
 
-    this.state = { listData: [] };
+    this.state = {
+      listData: [],
+      loading: false,
+      showPlaceholder: (this.props.listName === null || this.props.listName === ""),
+    };
+  }
+
+  /*
+   * Opens the web part property pane
+  */
+  private _onConfigure() {
+    this.props.context.propertyPane.open();
   }
 
   public render(): React.ReactElement<IFilteredPromotedLinksProps> {
+
+    if (this.state.showPlaceholder) {
+      // Check if placeholder needs to be shown
+      return (
+        <Placeholder
+          iconName="Edit"
+          iconText="Filtered Promoted Links web part configuration"
+          description="Please configure the web part to show filtered promoted links."
+          buttonLabel="Configure"
+          onConfigure={this._onConfigure}
+        />
+      );
+    }
+
     return (
       <div className={styles.filteredPromotedLinks}>
-        <div className={styles.container}>
-
-          {
-            this.state.listData.map((item: IFilteredPromotedLinkDataItem) => {
-              return <FilteredPromotedLinkItem
-                title={item.Title}
-                description={item.Description}
-                imageUrl={item.ImageUrl}
-                href={item.LinkUrl}
-                owner={item.Owner} />;
-
-            })
-          }
-
-          <div style={{ clear: 'both' }}></div>
+        <div >
+          <h2>{this.props.description}</h2>
         </div>
+        {
+          this.state.loading ?
+            (
+              <Spinner size={SpinnerSize.large} label="Retrieving results ..." />
+            ) : (
+              this.state.listData.length === 0 ?
+                (
+                  <Placeholder
+                    iconName="InfoSolid"
+                    iconText="No items found"
+                    description="The Promoted links list you selected does not contain items."
+                  />
+                ) : (
+                  <div className={styles.container}>
+                    {
+                      this.state.listData.map((item: IFilteredPromotedLinkDataItem) => {
+                        return <FilteredPromotedLinkItem
+                          title={item.Title}
+                          description={item.Description}
+                          imageUrl={item.ImageUrl}
+                          href={item.LinkUrl}
+                          owner={item.Owner}
+                        />;
+                      })
+                    }
+                    <div style={{ clear: 'both' }}></div>
+                  </div>
+                )
+            )
+        }
       </div>
     );
   }
 
   public componentDidMount(): void {
-    this.loadData();
+    if (this.props.listName !== null && this.props.listName !== "") {
+      // console.log(`2 current listname ${this.props.listName}`);
+      this.loadData();
+    }
+  }
+
+  public componentDidUpdate(prevProps: IFilteredPromotedLinksProps, prevState: IFilteredPromotedLinksState, prevContext: any) {
+    // console.log(`current listname ${this.props.listName} previous ${prevProps.listName}`);
+    if (prevProps.listName != this.props.listName || prevProps.filterName != this.props.filterName) {
+      console.log(`SUCCESS! current listName ${this.props.listName} != previous ${prevProps.listName} || filterName ${this.props.filterName} != previous ${prevProps.filterName} `);
+      if (this.props.listName !== null && this.props.listName !== "") {
+      //if (prevProps.filterName != this.props.filterName
+      //  || prevProps.listName != this.props.listName && (this.props.filterName && this.props.listName)) {
+          console.log(`list name ${this.props.listName} is not null && ${this.props.listName} is !== to empty string`);
+        this.loadData();
+      } else {
+        this.setState({
+          showPlaceholder: true
+        });
+      }
+    }
   }
 
   private loadData(): void {
+    console.log("loading data");
     if (this.props.isWorkbench) {
       // get mock data in Workbench
       this.setState({
@@ -74,12 +141,13 @@ export default class FilteredPromotedLinks extends React.Component<IFilteredProm
       });
     } else {
       // get data from SharePoint
-      this.props.spHttpClient.get(`${this.props.siteUrl}/_api/Web/Lists(guid'${this.props.listName}')/items?$select=Title,Description,BackgroundImageLocation,LinkLocation,Owner/Title&$expand=Owner/Id&$filter=Category eq '${this.props.categoryName}'`, SPHttpClient.configurations.v1)
+      console.log("get data from SharePoint");
+      this.props.spHttpClient.get(`${this.props.siteUrl}/_api/Web/Lists(guid'${this.props.listName}')/items?$select=Title,Description,BackgroundImageLocation,LinkLocation,Owner/Title&$expand=Owner/Id&$filter=Filter eq '${this.props.filterName}'`, SPHttpClient.configurations.v1)
         .then(response => {
           return response.json();
         })
         .then((items: any) => {
-          // console.log(items);
+          console.log(items);
           const listItems: IFilteredPromotedLinkDataItem[] = [];
           for (let i: number = 0; i < items.value.length; i++) {
             listItems.push({
@@ -90,17 +158,14 @@ export default class FilteredPromotedLinks extends React.Component<IFilteredProm
               Owner: items.value[i].Owner.Title
             });
           }
-          this.setState({ listData: listItems });
+          this.setState({
+            listData: listItems,
+            loading: false,
+            showPlaceholder: false
+          });
         }, (err: any) => {
           console.log(err);
         });
-    }
-  }
-
-  public componentDidUpdate(prevProps: IFilteredPromotedLinksProps, prevState: IFilteredPromotedLinksState, prevContext: any) {
-    if (prevProps.categoryName != this.props.categoryName 
-      || prevProps.listName != this.props.listName && (this.props.categoryName && this.props.listName)) {
-      this.loadData();
     }
   }
 }

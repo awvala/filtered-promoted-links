@@ -4,6 +4,7 @@ import { Version } from '@microsoft/sp-core-library';
 import {
   BaseClientSideWebPart,
   IPropertyPaneConfiguration,
+  PropertyPaneTextField,
   PropertyPaneDropdown,
   IPropertyPaneDropdownOption
 } from '@microsoft/sp-webpart-base';
@@ -23,8 +24,8 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
 
   private lists: IPropertyPaneDropdownOption[];
   private listsDropdownDisabled: boolean = true;
-  private categories: IPropertyPaneDropdownOption[];
-  private categoriesDropdownDisabled: boolean = true;
+  private filters: IPropertyPaneDropdownOption[];
+  private filtersDropdownDisabled: boolean = true;
 
   public render(): void {
     const element: React.ReactElement<IFilteredPromotedLinksProps> = React.createElement(
@@ -34,7 +35,9 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
         siteUrl: this.context.pageContext.web.absoluteUrl,
         spHttpClient: this.context.spHttpClient,
         listName: this.properties.listName,
-        categoryName: this.properties.categoryName
+        filterName: this.properties.filterName,
+        description: this.properties.description,
+        context: this.context
       }
     );
 
@@ -60,15 +63,18 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
             {
               groupName: strings.BasicGroupName,
               groupFields: [
+                PropertyPaneTextField('description', {
+                  label: strings.DescriptionFieldLabel
+                }),
                 PropertyPaneDropdown('listName', {
                   label: strings.ListNameFieldLabel,
                   options: this.lists,
                   disabled: this.listsDropdownDisabled
                 }),
-                PropertyPaneDropdown('categoryName', {
-                  label: strings.CategoryNameFieldLabel,
-                  options: this.categories,
-                  disabled: this.categoriesDropdownDisabled
+                PropertyPaneDropdown('filterName', {
+                  label: strings.FilterNameFieldLabel,
+                  options: this.filters,
+                  disabled: this.filtersDropdownDisabled
                 })
               ]
             }
@@ -80,7 +86,7 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
 
   protected onPropertyPaneConfigurationStart(): void {
     this.listsDropdownDisabled = !this.lists;
-    this.categoriesDropdownDisabled = !this.properties.listName || !this.categories;
+    this.filtersDropdownDisabled = !this.properties.listName || !this.filters;
 
     if (this.lists) {
       return;
@@ -94,11 +100,11 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
         this.lists = data;
         this.listsDropdownDisabled = false;
         this.context.propertyPane.refresh();
-        return this.fetchCategoryOptions();
+        return this.fetchFilterOptions();
       })
-      .then((categoryOptions: IPropertyPaneDropdownOption[]): void => {
-        this.categories = categoryOptions;
-        this.categoriesDropdownDisabled = !this.properties.listName;
+      .then((filterOptions: IPropertyPaneDropdownOption[]): void => {
+        this.filters = filterOptions;
+        this.filtersDropdownDisabled = !this.properties.listName;
         this.context.propertyPane.refresh();
         this.context.statusRenderer.clearLoadingIndicator(this.domElement);
         this.render();
@@ -110,25 +116,25 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
       newValue) {
       // push new list value
       super.onPropertyPaneFieldChanged(propertyPath, oldValue, newValue);
-      // get previously selected category
-      const previouscategory: string = this.properties.categoryName;
-      // reset selected category
-      this.properties.categoryName = undefined;
-      // push new category value
-      this.onPropertyPaneFieldChanged('categoryName', previouscategory, this.properties.categoryName);
-      // disable category selector until new categories are loaded
-      this.categoriesDropdownDisabled = true;
-      // refresh the category selector control by repainting the property pane
+      // get previously selected filter
+      const previousfilter: string = this.properties.filterName;
+      // reset selected filter
+      this.properties.filterName = undefined;
+      // push new filter value
+      this.onPropertyPaneFieldChanged('filterName', previousfilter, this.properties.filterName);
+      // disable filter selector until new filters are loaded
+      this.filtersDropdownDisabled = true;
+      // refresh the filter selector control by repainting the property pane
       this.context.propertyPane.refresh();
-      // communicate loading categories // Disable 02/07/19 as render method returned a blank.
-      // this.context.statusRenderer.displayLoadingIndicator(this.domElement, 'categories');
+      // communicate loading filters // Disable 02/07/19 as render method returned a blank.
+      // this.context.statusRenderer.displayLoadingIndicator(this.domElement, 'filters');
 
-      this.fetchCategoryOptions()
-        .then((categoryOptions: IPropertyPaneDropdownOption[]): void => {
-          // store categories
-          this.categories = categoryOptions;
-          // enable category selector
-          this.categoriesDropdownDisabled = false;
+      this.fetchFilterOptions()
+        .then((filterOptions: IPropertyPaneDropdownOption[]): void => {
+          // store filters
+          this.filters = filterOptions;
+          // enable filter selector
+          this.filtersDropdownDisabled = false;
           // clear status indicator
           this.context.statusRenderer.clearLoadingIndicator(this.domElement);
           // re-render the web part as clearing the loading indicator removes the web part body
@@ -169,26 +175,22 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
   }
 
   //  SharePoint API
-  private fetchCategoryOptions(): Promise<IPropertyPaneDropdownOption[]> {
-    const url = this.context.pageContext.web.absoluteUrl + `/_api/Web/Lists(guid'${this.properties.listName}')/items?$select=Category&$orderby=Category asc`;
+  private fetchFilterOptions(): Promise<IPropertyPaneDropdownOption[]> {
+    const url = this.context.pageContext.web.absoluteUrl + `/_api/Web/Lists(guid'${this.properties.listName}')/items?$select=Filter&$orderby=Filter asc`;
     
     if (!this.properties.listName) {
       // resolve to empty options since no list has been selected
       return Promise.resolve();
     } else {
-      // console.log(`Start fetchcategories: ${url}`);
       return this.fetchLists(url).then((response) => {
-        //console.log(`category response: ${response}`);
         let options: Array<IPropertyPaneDropdownOption> = new Array<IPropertyPaneDropdownOption>();
         let lists: ISPList[] = response.value;
-        // console.log(`Lists: ${lists}`);
         lists.forEach((list: ISPList) => {
-          options.push({ key: list.Category, text: list.Category });
+          options.push({ key: list.Filter, text: list.Filter });
         });
-        // Remove duplicate Categories
+        // Remove duplicate filters
         options = options.filter((value, index, array) => 
           !array.filter((v, i) => JSON.stringify(value) == JSON.stringify(v) && i < index).length);
-        // console.log(`Options: ${options}`);
         return options;
       });
     }
@@ -198,8 +200,8 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
 
 /*
 // Static method
-private loadcategories(): Promise<IPropertyPaneDropdownOption[]> {
-  console.log ("start Loadcategories");
+private loadfilters(): Promise<IPropertyPaneDropdownOption[]> {
+  console.log ("start Loadfilters");
   if (!this.properties.listName) {
     // resolve to empty options since no list has been selected
     return Promise.resolve();
@@ -209,7 +211,7 @@ private loadcategories(): Promise<IPropertyPaneDropdownOption[]> {
 
   return new Promise<IPropertyPaneDropdownOption[]>((resolve: (options: IPropertyPaneDropdownOption[]) => void, reject: (error: any) => void) => {
     setTimeout(() => {
-      const categories = {
+      const filters = {
         sharedDocuments: [
           {
             key: 'spfx_presentation.pptx',
@@ -231,8 +233,8 @@ private loadcategories(): Promise<IPropertyPaneDropdownOption[]> {
           }
         ]
       };
-      resolve(categories[wp.properties.listName]);
+      resolve(filters[wp.properties.listName]);
     }, 2000);
-    // console.log("In Loadcategories method: "+ this.categories);
+    // console.log("In Loadfilters method: "+ this.filters);
   });
 }*/

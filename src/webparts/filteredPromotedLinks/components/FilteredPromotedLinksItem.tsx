@@ -42,8 +42,7 @@ export interface IFilteredPromotedLinkItemState {
             <div className={this.state.hovering ? styles.pLinkItemHoverPanelExpanded : styles.pLinkItemHoverPanel}>
               <div className={styles.pLinkItemTitle}>{this.props.title}</div>
               <div className={styles.pLinkItemDesc}>
-                {this.props.owner}
-                <br></br>
+                <p className={styles.pLinkItemOwner}>{this.props.owner}</p>
                 {this.props.description}
               </div>
             </div>
