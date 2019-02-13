@@ -17,7 +17,7 @@ export default class FilteredPromotedLinks extends React.Component<IFilteredProm
 
   constructor(props: IFilteredPromotedLinksProps, state: IFilteredPromotedLinksState) {
     super(props);
-    
+
     this._onConfigure = this._onConfigure.bind(this);
 
     this.state = {
@@ -49,6 +49,19 @@ export default class FilteredPromotedLinks extends React.Component<IFilteredProm
       );
     }
 
+    if (this.props.missingField) {
+      // Check if FetchFilters API call errored with missing fields
+      return (
+        <Placeholder
+          iconName="InfoSolid"
+          iconText="The list you selected is missing a Filter or Owner field."
+          description="Please select another list or add the missing field(s) to this list."
+          buttonLabel="Configure"
+          onConfigure={this._onConfigure}
+        />
+      );
+    }
+
     return (
       <div className={styles.filteredPromotedLinks}>
         <div >
@@ -64,7 +77,9 @@ export default class FilteredPromotedLinks extends React.Component<IFilteredProm
                   <Placeholder
                     iconName="InfoSolid"
                     iconText="No items found"
-                    description="The Promoted links list you selected does not contain items."
+                    description="Please select a filter in the property pane."
+                    buttonLabel="Configure"
+                    onConfigure={this._onConfigure}
                   />
                 ) : (
                   <div className={styles.container}>
@@ -90,19 +105,13 @@ export default class FilteredPromotedLinks extends React.Component<IFilteredProm
 
   public componentDidMount(): void {
     if (this.props.listName !== null && this.props.listName !== "") {
-      // console.log(`2 current listname ${this.props.listName}`);
       this.loadData();
     }
   }
 
   public componentDidUpdate(prevProps: IFilteredPromotedLinksProps, prevState: IFilteredPromotedLinksState, prevContext: any) {
-    // console.log(`current listname ${this.props.listName} previous ${prevProps.listName}`);
     if (prevProps.listName != this.props.listName || prevProps.filterName != this.props.filterName) {
-      // console.log(`SUCCESS! current listName ${this.props.listName} != previous ${prevProps.listName} || filterName ${this.props.filterName} != previous ${prevProps.filterName} `);
       if (this.props.listName !== null && this.props.listName !== "") {
-      //if (prevProps.filterName != this.props.filterName
-      //  || prevProps.listName != this.props.listName && (this.props.filterName && this.props.listName)) {
-          // console.log(`list name ${this.props.listName} is not null && ${this.props.listName} is !== to empty string`);
         this.loadData();
       } else {
         this.setState({
@@ -113,7 +122,6 @@ export default class FilteredPromotedLinks extends React.Component<IFilteredProm
   }
 
   private loadData(): void {
-    // console.log("loading data");
     if (this.props.isWorkbench) {
       // get mock data in Workbench
       this.setState({
@@ -142,14 +150,14 @@ export default class FilteredPromotedLinks extends React.Component<IFilteredProm
         ]
       });
     } else {
-      // get data from SharePoint
-      console.log("get data from SharePoint");
-      this.props.spHttpClient.get(`${this.props.siteUrl}/_api/Web/Lists(guid'${this.props.listName}')/items?$select=Title,Description,BackgroundImageLocation,LinkLocation,Owner/Title&$expand=Owner/Id&$filter=Filter eq '${this.props.filterName}'`, SPHttpClient.configurations.v1)
+      if (this.props.missingField === false) {
+        // get data from SharePoint
+        this.props.spHttpClient.get(`${this.props.siteUrl}/_api/Web/Lists(guid'${this.props.listName}')/items?$select=Title,Description,BackgroundImageLocation,LinkLocation,Owner/Title&$expand=Owner/Id&$filter=Filter eq '${this.props.filterName}'`, SPHttpClient.configurations.v1)
         .then(response => {
           return response.json();
         })
         .then((items: any) => {
-          console.log(items);
+          // console.log(items);
           const listItems: IFilteredPromotedLinkDataItem[] = [];
           for (let i: number = 0; i < items.value.length; i++) {
             listItems.push({
@@ -168,6 +176,16 @@ export default class FilteredPromotedLinks extends React.Component<IFilteredProm
         }, (err: any) => {
           console.log(err);
         });
+      } else {
+        //  disable the Filter dropdown
+        this.setState({
+          listData: [],
+          loading: false,
+          showPlaceholder: false
+        });
+        
+      }
+      
     }
   }
 }
