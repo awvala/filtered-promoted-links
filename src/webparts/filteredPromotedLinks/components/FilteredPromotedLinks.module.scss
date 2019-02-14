@@ -42,6 +42,13 @@
       transition-duration: .5s;
       transition-timing-function: cubic-bezier(0, 1, 0.5, 1);
     }
+
+    &:hover::after {
+      top: 0px;
+      transition-property: top;
+      transition-duration: .5s;
+      transition-timing-function: cubic-bezier(0, 1, 0.5, 1);
+    }
   }
 
   .pLinkItemHoverPanelExpanded {
@@ -50,11 +57,19 @@
     transition-property: top;
     transition-duration: .5s;
     transition-timing-function: cubic-bezier(0, 1, 0.5, 1);
-
   }
 
+  .pLinkItemHoverPanelCollapse {
+    @extend .pLinkItemHoverPanel;
+    top: $box-size * .80;
+    transition-property: top;
+    transition-duration: .5s;
+    transition-timing-function: cubic-bezier(0, 1, 0.5, 1);
+  }
+
+
+
   .pLinkItemTitle {
-    font-size: ($box-size - ($box-size * .80)) - 4px;
     line-height: ($box-size - ($box-size * .80)) - 4px;
     font-weight: bold;
     color: #eee;

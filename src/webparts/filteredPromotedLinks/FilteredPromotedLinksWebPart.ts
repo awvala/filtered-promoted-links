@@ -37,7 +37,8 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
         listName: this.properties.listName,
         filterName: this.properties.filterName,
         description: this.properties.description,
-        context: this.context
+        context: this.context,
+        missingField: this.properties.missingField,
       }
     );
 
@@ -50,6 +51,24 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
 
   protected get dataVersion(): Version {
     return Version.parse('1.0');
+  }
+
+  // Determine environment and add apply button to the classic page to save property pane settings.
+  protected get disableReactivePropertyChanges(): boolean {
+
+    let buttonStatus: boolean = false;
+
+    if (Environment.type == EnvironmentType.ClassicSharePoint) {
+      // Classic web page, show Apply button
+      buttonStatus = true;
+    } else if (Environment.type === EnvironmentType.SharePoint) {
+      // Modern SharePoint page, hide Apply button
+      buttonStatus = false;
+    } else if (Environment.type === EnvironmentType.Local) {
+      // Workbench page, hide Apply button
+      buttonStatus = false;
+    }
+    return buttonStatus;
   }
 
   protected getPropertyPaneConfiguration(): IPropertyPaneConfiguration {
@@ -92,19 +111,20 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
       return;
     }
 
-    // Disable 02/07/19 as render method returned a blank.
-    // this.context.statusRenderer.displayLoadingIndicator(this.domElement, 'lists');
-
-    this.fetchOptions()
-      .then((data: IPropertyPaneDropdownOption[]): Promise<IPropertyPaneDropdownOption[]> => {
-        this.lists = data;
+    this.loadLists()
+      .then((listOptions: IPropertyPaneDropdownOption[]): Promise<IPropertyPaneDropdownOption[]> => {
+        this.lists = listOptions;
         this.listsDropdownDisabled = false;
         this.context.propertyPane.refresh();
-        return this.fetchFilterOptions();
+        return this.loadFilters();
       })
       .then((filterOptions: IPropertyPaneDropdownOption[]): void => {
         this.filters = filterOptions;
-        this.filtersDropdownDisabled = !this.properties.listName;
+        if (this.filters === null) {
+          this.properties.missingField = true;
+        } else {
+          this.properties.missingField = false;
+        }
         this.context.propertyPane.refresh();
         this.context.statusRenderer.clearLoadingIndicator(this.domElement);
         this.render();
@@ -126,23 +146,18 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
       this.filtersDropdownDisabled = true;
       // refresh the filter selector control by repainting the property pane
       this.context.propertyPane.refresh();
-      // communicate loading filters // Disable 02/07/19 as render method returned a blank.
-      // this.context.statusRenderer.displayLoadingIndicator(this.domElement, 'filters');
 
-      this.fetchFilterOptions()
+      this.loadFilters()
         .then((filterOptions: IPropertyPaneDropdownOption[]): void => {
           // store filters
           this.filters = filterOptions;
-          // enable filter selector
-          this.filtersDropdownDisabled = false;
-          // clear Filter property pane field
-          this.properties.filterName = "";
           // clear status indicator
           this.context.statusRenderer.clearLoadingIndicator(this.domElement);
           // re-render the web part as clearing the loading indicator removes the web part body
           this.render();
           // refresh the item selector control by repainting the property pane
           this.context.propertyPane.refresh();
+
         });
     }
     else {
@@ -150,18 +165,7 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
     }
   }
 
-  private fetchLists(url: string): Promise<ISPLists> {
-    return this.context.spHttpClient.get(url, SPHttpClient.configurations.v1).then((response: SPHttpClientResponse) => {
-      if (response.ok) {
-        return response.json();
-      } else {
-        console.log("WARNING - failed to hit URL " + url + ". Error = " + response.statusText);
-        return null;
-      }
-    });
-  }
-
-  private fetchOptions(): Promise<IPropertyPaneDropdownOption[]> {
+  private loadLists(): Promise<IPropertyPaneDropdownOption[]> {
     const url = this.context.pageContext.web.absoluteUrl + `/_api/web/lists?$filter=BaseTemplate eq 170 and Hidden eq false`;
 
     return this.fetchLists(url).then((response) => {
@@ -176,67 +180,62 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
     });
   }
 
+  private fetchLists(url: string): Promise<ISPLists> {
+    return this.context.spHttpClient.get(url, SPHttpClient.configurations.v1).then((response: SPHttpClientResponse) => {
+      if (response.ok) {
+        return response.json();
+      } else {
+        console.log("WARNING - failed to hit URL " + url + ". Error = " + response.statusText);
+        return null;
+      }
+    });
+  }
+
   //  SharePoint API
-  private fetchFilterOptions(): Promise<IPropertyPaneDropdownOption[]> {
-    const url = this.context.pageContext.web.absoluteUrl + `/_api/Web/Lists(guid'${this.properties.listName}')/items?$select=Filter&$orderby=Filter asc`;
-    
+  private loadFilters(): Promise<IPropertyPaneDropdownOption[]> {
+    const url = this.context.pageContext.web.absoluteUrl + `/_api/Web/Lists(guid'${this.properties.listName}')/items?$select=Category&$orderby=Category asc`;
+
     if (!this.properties.listName) {
-      // resolve to empty options since no list has been selected
+      this.filtersDropdownDisabled = true;
       return Promise.resolve();
     } else {
-      return this.fetchLists(url).then((response) => {
-        let options: Array<IPropertyPaneDropdownOption> = new Array<IPropertyPaneDropdownOption>();
-        let lists: ISPList[] = response.value;
-        lists.forEach((list: ISPList) => {
-          options.push({ key: list.Filter, text: list.Filter });
-        });
-        // Remove duplicate filters
-        options = options.filter((value, index, array) => 
-          !array.filter((v, i) => JSON.stringify(value) == JSON.stringify(v) && i < index).length);
-        return options;
+      return this.fetchFilters(url).then((response) => {
+
+        if (response === null) {
+          this.properties.missingField = true;
+          this.filtersDropdownDisabled = true;
+        } else {
+          let options: Array<IPropertyPaneDropdownOption> = new Array<IPropertyPaneDropdownOption>();
+          const lists: ISPList[] = response.value;
+          this.properties.missingField = false;
+
+          if (lists.length === 0) {
+            this.filtersDropdownDisabled = true;
+            return Promise.resolve();
+          } else {
+            this.filtersDropdownDisabled = false;
+            lists.forEach((list: ISPList) => {
+              options.push({ key: list.Category, text: list.Category });
+            });
+            // Remove duplicate filters
+            options = options.filter((value, index, array) =>
+              !array.filter((v, i) => JSON.stringify(value) == JSON.stringify(v) && i < index).length);
+            return options;
+          }
+        }
       });
     }
   }
 
-}
-
-/*
-// Static method
-private loadfilters(): Promise<IPropertyPaneDropdownOption[]> {
-  console.log ("start Loadfilters");
-  if (!this.properties.listName) {
-    // resolve to empty options since no list has been selected
-    return Promise.resolve();
+  private fetchFilters(url: string): Promise<ISPLists> {
+    return this.context.spHttpClient.get(url, SPHttpClient.configurations.v1).then((response: SPHttpClientResponse) => {
+      if (response.ok) {
+        return response.json();
+      } else {
+        console.log("WARNING - failed to hit URL " + url + ". Error = " + response.statusText);
+        return null;
+      }
+    });
   }
 
-  const wp: FilteredPromotedLinksWebPart = this;
-
-  return new Promise<IPropertyPaneDropdownOption[]>((resolve: (options: IPropertyPaneDropdownOption[]) => void, reject: (error: any) => void) => {
-    setTimeout(() => {
-      const filters = {
-        sharedDocuments: [
-          {
-            key: 'spfx_presentation.pptx',
-            text: 'SPFx for the masses'
-          },
-          {
-            key: 'hello-world.spapp',
-            text: 'hello-world.spapp'
-          }
-        ],
-        myDocuments: [
-          {
-            key: 'isaiah_cv.docx',
-            text: 'Isaiah CV'
-          },
-          {
-            key: 'isaiah_expenses.xlsx',
-            text: 'Isaiah Expenses'
-          }
-        ]
-      };
-      resolve(filters[wp.properties.listName]);
-    }, 2000);
-    // console.log("In Loadfilters method: "+ this.filters);
-  });
-}*/
+}

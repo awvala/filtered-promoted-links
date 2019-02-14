@@ -6,12 +6,13 @@ export interface IFilteredPromotedLinksWebPartProps {
     filterName: string;  // Stores the filter field value
     description: string; // Stores the Web Part Title
     context: WebPartContext;
+    missingField: boolean; // Stores state of Filter API call
    }
 
    export interface ISPList {
     Title: string;
     Id: string;
-    Filter: string;
+    Category: string;
   }
   
   export interface ISPLists {
