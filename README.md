@@ -27,9 +27,9 @@ This is a custom Promoted Links web part that enables a filtered, cascading drop
 ### Demos
 
 #### Adding Web Part to a Modern Page
-![Full Demo of the Modern Promoted Links](/src/assets/placeholder)
+![Full Demo of the Modern Promoted Links](/src/assets/FilteredPromotedLinksModern.gif)
 
 ---
 
 #### Adding Web Part to a Classic Page
-![Full Demo of the Modern Promoted Links in a classic page](/src/assets/placeholder)
+![Full Demo of the Modern Promoted Links in a classic page](/src/assets/FilteredPromotedLinksClassic.gif)
