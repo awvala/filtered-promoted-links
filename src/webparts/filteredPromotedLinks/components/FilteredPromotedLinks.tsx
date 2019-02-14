@@ -47,9 +47,7 @@ export default class FilteredPromotedLinks extends React.Component<IFilteredProm
           onConfigure={this._onConfigure}
         />
       );
-    }
-
-    if (this.props.missingField) {
+    } else if (this.props.missingField) {
       // Check if FetchFilters API call errored with missing fields
       return (
         <Placeholder
@@ -152,30 +150,30 @@ export default class FilteredPromotedLinks extends React.Component<IFilteredProm
     } else {
       if (this.props.missingField === false) {
         // get data from SharePoint
-        this.props.spHttpClient.get(`${this.props.siteUrl}/_api/Web/Lists(guid'${this.props.listName}')/items?$select=Title,Description,BackgroundImageLocation,LinkLocation,Owner/Title&$expand=Owner/Id&$filter=Filter eq '${this.props.filterName}'`, SPHttpClient.configurations.v1)
-        .then(response => {
-          return response.json();
-        })
-        .then((items: any) => {
-          // console.log(items);
-          const listItems: IFilteredPromotedLinkDataItem[] = [];
-          for (let i: number = 0; i < items.value.length; i++) {
-            listItems.push({
-              Title: items.value[i].Title,
-              Description: items.value[i].Description,
-              ImageUrl: items.value[i].BackgroundImageLocation.Url,
-              LinkUrl: items.value[i].LinkLocation.Url,
-              Owner: items.value[i].Owner.Title
+        this.props.spHttpClient.get(`${this.props.siteUrl}/_api/Web/Lists(guid'${this.props.listName}')/items?$select=Title,Description,BackgroundImageLocation,LinkLocation,Owner/Title&$expand=Owner/Id&$filter=Category eq '${this.props.filterName}'`, SPHttpClient.configurations.v1)
+          .then(response => {
+            return response.json();
+          })
+          .then((items: any) => {
+            // console.log(items);
+            const listItems: IFilteredPromotedLinkDataItem[] = [];
+            for (let i: number = 0; i < items.value.length; i++) {
+              listItems.push({
+                Title: items.value[i].Title,
+                Description: items.value[i].Description,
+                ImageUrl: items.value[i].BackgroundImageLocation.Url,
+                LinkUrl: items.value[i].LinkLocation.Url,
+                Owner: items.value[i].Owner.Title
+              });
+            }
+            this.setState({
+              listData: listItems,
+              loading: false,
+              showPlaceholder: false
             });
-          }
-          this.setState({
-            listData: listItems,
-            loading: false,
-            showPlaceholder: false
+          }, (err: any) => {
+            console.log(err);
           });
-        }, (err: any) => {
-          console.log(err);
-        });
       } else {
         //  disable the Filter dropdown
         this.setState({
@@ -183,9 +181,9 @@ export default class FilteredPromotedLinks extends React.Component<IFilteredProm
           loading: false,
           showPlaceholder: false
         });
-        
+
       }
-      
+
     }
   }
 }

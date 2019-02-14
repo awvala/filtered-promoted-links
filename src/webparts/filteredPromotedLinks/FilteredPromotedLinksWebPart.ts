@@ -114,21 +114,19 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
     // Disable 02/07/19 as render method returned a blank.
     // this.context.statusRenderer.displayLoadingIndicator(this.domElement, 'lists');
 
-    this.fetchOptions()
-      .then((data: IPropertyPaneDropdownOption[]): Promise<IPropertyPaneDropdownOption[]> => {
-        this.lists = data;
+    this.loadLists()
+      .then((listOptions: IPropertyPaneDropdownOption[]): Promise<IPropertyPaneDropdownOption[]> => {
+        this.lists = listOptions;
         this.listsDropdownDisabled = false;
         this.context.propertyPane.refresh();
-        return this.fetchFilterOptions();
+        return this.loadFilters();
       })
       .then((filterOptions: IPropertyPaneDropdownOption[]): void => {
         this.filters = filterOptions;
         if (this.filters === null) {
           this.properties.missingField = true;
-          // this.filtersDropdownDisabled = true;
         } else {
           this.properties.missingField = false;
-          // this.filtersDropdownDisabled = false;
         }
         this.context.propertyPane.refresh();
         this.context.statusRenderer.clearLoadingIndicator(this.domElement);
@@ -154,20 +152,19 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
       // communicate loading filters // Disable 02/07/19 as render method returned a blank.
       // this.context.statusRenderer.displayLoadingIndicator(this.domElement, 'filters');
 
-      this.fetchFilterOptions()
+      this.loadFilters()
         .then((filterOptions: IPropertyPaneDropdownOption[]): void => {
           // store filters
           this.filters = filterOptions;
-          // enable filter selector
-          this.filtersDropdownDisabled = this.properties.missingField;
           // clear Filter property pane field
-          this.properties.filterName = null;
+          // this.properties.filterName = undefined;
           // clear status indicator
           this.context.statusRenderer.clearLoadingIndicator(this.domElement);
           // re-render the web part as clearing the loading indicator removes the web part body
           this.render();
           // refresh the item selector control by repainting the property pane
           this.context.propertyPane.refresh();
+
         });
     }
     else {
@@ -175,7 +172,7 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
     }
   }
 
-  private fetchOptions(): Promise<IPropertyPaneDropdownOption[]> {
+  private loadLists(): Promise<IPropertyPaneDropdownOption[]> {
     const url = this.context.pageContext.web.absoluteUrl + `/_api/web/lists?$filter=BaseTemplate eq 170 and Hidden eq false`;
     
     return this.fetchLists(url).then((response) => {
@@ -202,24 +199,27 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
   }
 
   //  SharePoint API
-  private fetchFilterOptions(): Promise<IPropertyPaneDropdownOption[]> {
-    const url = this.context.pageContext.web.absoluteUrl + `/_api/Web/Lists(guid'${this.properties.listName}')/items?$select=Filter&$orderby=Filter asc`;
+  private loadFilters(): Promise<IPropertyPaneDropdownOption[]> {
+    const url = this.context.pageContext.web.absoluteUrl + `/_api/Web/Lists(guid'${this.properties.listName}')/items?$select=Category&$orderby=Category asc`;
 
     if (!this.properties.listName) {
+      this.filtersDropdownDisabled = true;
        return Promise.resolve();
     } else {
       return this.fetchFilters(url).then((response) => {
         if (response === null) {
           this.properties.missingField = true;
-
+          this.filtersDropdownDisabled = true;
         } else {
           let options: Array<IPropertyPaneDropdownOption> = new Array<IPropertyPaneDropdownOption>();
-          let lists: ISPList[] = response.value;
+          const lists: ISPList[] = response.value;
           this.properties.missingField = false;
-
+          this.filtersDropdownDisabled = false;
           lists.forEach((list: ISPList) => {
-            options.push({ key: list.Filter, text: list.Filter });
+            options.push({ key: list.Category, text: list.Category });
           });
+          // Create a default filter option
+          options.unshift({key: 0, text: ""});
           // Remove duplicate filters
           options = options.filter((value, index, array) => 
             !array.filter((v, i) => JSON.stringify(value) == JSON.stringify(v) && i < index).length);
