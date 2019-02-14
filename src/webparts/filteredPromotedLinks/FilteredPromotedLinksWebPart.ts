@@ -111,9 +111,6 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
       return;
     }
 
-    // Disable 02/07/19 as render method returned a blank.
-    // this.context.statusRenderer.displayLoadingIndicator(this.domElement, 'lists');
-
     this.loadLists()
       .then((listOptions: IPropertyPaneDropdownOption[]): Promise<IPropertyPaneDropdownOption[]> => {
         this.lists = listOptions;
@@ -149,15 +146,11 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
       this.filtersDropdownDisabled = true;
       // refresh the filter selector control by repainting the property pane
       this.context.propertyPane.refresh();
-      // communicate loading filters // Disable 02/07/19 as render method returned a blank.
-      // this.context.statusRenderer.displayLoadingIndicator(this.domElement, 'filters');
 
       this.loadFilters()
         .then((filterOptions: IPropertyPaneDropdownOption[]): void => {
           // store filters
           this.filters = filterOptions;
-          // clear Filter property pane field
-          // this.properties.filterName = undefined;
           // clear status indicator
           this.context.statusRenderer.clearLoadingIndicator(this.domElement);
           // re-render the web part as clearing the loading indicator removes the web part body
@@ -218,8 +211,6 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
           lists.forEach((list: ISPList) => {
             options.push({ key: list.Category, text: list.Category });
           });
-          // Create a default filter option
-          options.unshift({key: 0, text: ""});
           // Remove duplicate filters
           options = options.filter((value, index, array) => 
             !array.filter((v, i) => JSON.stringify(value) == JSON.stringify(v) && i < index).length);
