@@ -53,23 +53,23 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
     return Version.parse('1.0');
   }
 
-    // Determine environment and add apply button to the classic page to save property pane settings.
-    protected get disableReactivePropertyChanges(): boolean {
+  // Determine environment and add apply button to the classic page to save property pane settings.
+  protected get disableReactivePropertyChanges(): boolean {
 
-      let buttonStatus: boolean = false;
-  
-      if (Environment.type == EnvironmentType.ClassicSharePoint) {
-        // Classic web page, show Apply button
-        buttonStatus = true;
-      } else if (Environment.type === EnvironmentType.SharePoint) {
-        // Modern SharePoint page, hide Apply button
-        buttonStatus = false;
-      } else if (Environment.type === EnvironmentType.Local) {
-        // Workbench page, hide Apply button
-        buttonStatus = false;
-      }
-      return buttonStatus;
+    let buttonStatus: boolean = false;
+
+    if (Environment.type == EnvironmentType.ClassicSharePoint) {
+      // Classic web page, show Apply button
+      buttonStatus = true;
+    } else if (Environment.type === EnvironmentType.SharePoint) {
+      // Modern SharePoint page, hide Apply button
+      buttonStatus = false;
+    } else if (Environment.type === EnvironmentType.Local) {
+      // Workbench page, hide Apply button
+      buttonStatus = false;
     }
+    return buttonStatus;
+  }
 
   protected getPropertyPaneConfiguration(): IPropertyPaneConfiguration {
     return {
@@ -167,7 +167,7 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
 
   private loadLists(): Promise<IPropertyPaneDropdownOption[]> {
     const url = this.context.pageContext.web.absoluteUrl + `/_api/web/lists?$filter=BaseTemplate eq 170 and Hidden eq false`;
-    
+
     return this.fetchLists(url).then((response) => {
       let options: Array<IPropertyPaneDropdownOption> = new Array<IPropertyPaneDropdownOption>();
       let lists: ISPList[] = response.value;
@@ -197,9 +197,10 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
 
     if (!this.properties.listName) {
       this.filtersDropdownDisabled = true;
-       return Promise.resolve();
+      return Promise.resolve();
     } else {
       return this.fetchFilters(url).then((response) => {
+
         if (response === null) {
           this.properties.missingField = true;
           this.filtersDropdownDisabled = true;
@@ -207,14 +208,20 @@ export default class FilteredPromotedLinksWebPart extends BaseClientSideWebPart<
           let options: Array<IPropertyPaneDropdownOption> = new Array<IPropertyPaneDropdownOption>();
           const lists: ISPList[] = response.value;
           this.properties.missingField = false;
-          this.filtersDropdownDisabled = false;
-          lists.forEach((list: ISPList) => {
-            options.push({ key: list.Category, text: list.Category });
-          });
-          // Remove duplicate filters
-          options = options.filter((value, index, array) => 
-            !array.filter((v, i) => JSON.stringify(value) == JSON.stringify(v) && i < index).length);
-          return options;
+
+          if (lists.length === 0) {
+            this.filtersDropdownDisabled = true;
+            return Promise.resolve();
+          } else {
+            this.filtersDropdownDisabled = false;
+            lists.forEach((list: ISPList) => {
+              options.push({ key: list.Category, text: list.Category });
+            });
+            // Remove duplicate filters
+            options = options.filter((value, index, array) =>
+              !array.filter((v, i) => JSON.stringify(value) == JSON.stringify(v) && i < index).length);
+            return options;
+          }
         }
       });
     }

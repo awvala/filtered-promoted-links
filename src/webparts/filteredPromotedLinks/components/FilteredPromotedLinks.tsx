@@ -75,7 +75,7 @@ export default class FilteredPromotedLinks extends React.Component<IFilteredProm
                   <Placeholder
                     iconName="InfoSolid"
                     iconText="No items found"
-                    description="Please select a filter in the property pane."
+                    description="Please select a new list or update the filter in the property pane."
                     buttonLabel="Configure"
                     onConfigure={this._onConfigure}
                   />
@@ -147,43 +147,39 @@ export default class FilteredPromotedLinks extends React.Component<IFilteredProm
           }
         ]
       });
-    } else {
-      if (this.props.missingField === false) {
-        // get data from SharePoint
-        this.props.spHttpClient.get(`${this.props.siteUrl}/_api/Web/Lists(guid'${this.props.listName}')/items?$select=Title,Description,BackgroundImageLocation,LinkLocation,Owner/Title&$expand=Owner/Id&$filter=Category eq '${this.props.filterName}'`, SPHttpClient.configurations.v1)
-          .then(response => {
-            return response.json();
-          })
-          .then((items: any) => {
-            // console.log(items);
-            const listItems: IFilteredPromotedLinkDataItem[] = [];
-            for (let i: number = 0; i < items.value.length; i++) {
-              listItems.push({
-                Title: items.value[i].Title,
-                Description: items.value[i].Description,
-                ImageUrl: items.value[i].BackgroundImageLocation.Url,
-                LinkUrl: items.value[i].LinkLocation.Url,
-                Owner: items.value[i].Owner.Title
-              });
-            }
-            this.setState({
-              listData: listItems,
-              loading: false,
-              showPlaceholder: false
+    } else if (!this.props.missingField && this.props.filterName !== undefined) {
+      // get data from SharePoint
+      this.props.spHttpClient.get(`${this.props.siteUrl}/_api/Web/Lists(guid'${this.props.listName}')/items?$select=Title,Description,BackgroundImageLocation,LinkLocation,Owner/Title&$expand=Owner/Id&$filter=Category eq '${this.props.filterName}'`, SPHttpClient.configurations.v1)
+        .then(response => {
+          return response.json();
+        })
+        .then((items: any) => {
+          // console.log(items);
+          const listItems: IFilteredPromotedLinkDataItem[] = [];
+          for (let i: number = 0; i < items.value.length; i++) {
+            listItems.push({
+              Title: items.value[i].Title,
+              Description: items.value[i].Description,
+              ImageUrl: items.value[i].BackgroundImageLocation.Url,
+              LinkUrl: items.value[i].LinkLocation.Url,
+              Owner: items.value[i].Owner.Title
             });
-          }, (err: any) => {
-            console.log(err);
+          }
+          this.setState({
+            listData: listItems,
+            loading: false,
+            showPlaceholder: false
           });
-      } else {
-        //  disable the Filter dropdown
-        this.setState({
-          listData: [],
-          loading: false,
-          showPlaceholder: false
+        }, (err: any) => {
+          console.log(err);
         });
-
-      }
-
+    } else {
+      //  disable the Filter dropdown
+      this.setState({
+        listData: [],
+        loading: false,
+        showPlaceholder: false
+      });
     }
   }
 }
