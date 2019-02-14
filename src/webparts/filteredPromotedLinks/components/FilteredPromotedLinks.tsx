@@ -47,17 +47,6 @@ export default class FilteredPromotedLinks extends React.Component<IFilteredProm
           onConfigure={this._onConfigure}
         />
       );
-    } else if (this.props.missingField) {
-      // Check if FetchFilters API call errored with missing fields
-      return (
-        <Placeholder
-          iconName="InfoSolid"
-          iconText="The list you selected is missing a Filter or Owner field."
-          description="Please select another list or add the missing field(s) to this list."
-          buttonLabel="Configure"
-          onConfigure={this._onConfigure}
-        />
-      );
     }
 
     return (
@@ -66,11 +55,19 @@ export default class FilteredPromotedLinks extends React.Component<IFilteredProm
           <h2>{this.props.description}</h2>
         </div>
         {
-          this.state.loading ?
+          this.props.missingField ?
             (
-              <Spinner size={SpinnerSize.large} label="Retrieving results ..." />
-            ) : (
-              this.state.listData.length === 0 ?
+              <Placeholder
+                iconName="InfoSolid"
+                iconText="The list you selected is missing a Filter or Owner field."
+                description="Please select another list or add the missing field(s) to this list."
+                buttonLabel="Configure"
+                onConfigure={this._onConfigure}
+              />
+            ) : this.state.loading ?
+              (
+                <Spinner size={SpinnerSize.large} label="Retrieving results ..." />
+              ) : this.state.listData.length === 0 ?
                 (
                   <Placeholder
                     iconName="InfoSolid"
@@ -79,7 +76,8 @@ export default class FilteredPromotedLinks extends React.Component<IFilteredProm
                     buttonLabel="Configure"
                     onConfigure={this._onConfigure}
                   />
-                ) : (
+                ) :
+                (
                   <div className={styles.container}>
                     {
                       this.state.listData.map((item: IFilteredPromotedLinkDataItem) => {
@@ -95,7 +93,6 @@ export default class FilteredPromotedLinks extends React.Component<IFilteredProm
                     <div style={{ clear: 'both' }}></div>
                   </div>
                 )
-            )
         }
       </div>
     );
