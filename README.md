@@ -8,6 +8,7 @@ This is a custom Promoted Links web part that enables a filtered, cascading drop
 * Placeholder and Spinner elements to handle unconfigured web parts and empty lists.
 * Links configured to open in current window or in new tab based on Launch Behavior selection in the Promoted Links list. 
   * "Dialog" selections will open in a new tab. 
+* Error handling for empty lists or lists without the correct fields.
 
 ### Required List Settings
 * Promoted Link list
@@ -32,12 +33,3 @@ This is a custom Promoted Links web part that enables a filtered, cascading drop
 
 #### Adding Web Part to a Classic Page
 ![Full Demo of the Modern Promoted Links in a classic page](/src/assets/placeholder)
-
-### Building the code
-
-```bash
-git clone the repo
-npm i
-npm i -g gulp
-gulp
-```
